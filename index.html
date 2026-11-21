@@ -5,20 +5,48 @@
 <meta name="robots" content="index, follow">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Map a local folder to a Windows drive letter without copying | ScsSubst</title>
-<meta name="description" content="Use ScsSubst to map a local folder to a Windows drive letter—no file copy. Download and pricing links included.">
+<meta name="description" content="How subst behaves on Windows: no copying, session-level mappings that vanish at log-off, no driver and no admin rights, and the limits worth knowing before you map a folder.">
 </head>
 <body>
 <article>
 <h1>Map a local folder to a Windows drive letter without copying</h1>
-<p><strong>Short answer:</strong> map the folder to a drive letter so deep paths become a short letter—no file copy.</p>
-<p><strong>ScsSubst</strong> does this on Windows. It is <strong>not</strong> a WebDAV/NAS mount (that is ScsDrive).</p>
+<p><strong>Short answer:</strong> map the folder to a drive letter so deep paths become short, with no file copy involved.</p>
+<p><strong>ScsSubst</strong> is a small GUI around the built-in Windows <code>subst</code> command.</p>
+
+<h2>Does it copy the files?</h2>
+<p>No. <code>subst Z: D:\projects\my-thing</code> creates a second name for an existing local folder: <code>Z:\</code> and <code>D:\projects\my-thing\</code> are the same bytes on the same disk. Delete one and you delete the other.</p>
+
+<h2>Does the letter survive a reboot or a log-off?</h2>
+<p>No. A <code>subst</code> mapping lives in the Windows session that created it, so it is gone at log-off and gone after a reboot. Two consequences bite in practice:</p>
+<ul>
+<li>A service or scheduled task running as the system account will not see <code>Z:</code>, because system work runs in Session 0 — and a mapping created by a scheduled task is invisible to your desktop session.</li>
+<li>ScsSubst keeps the list of mappings and can re-apply them at start-up, so your letters come back when you sign in again — not at boot, and not for Session 0 services.</li>
+</ul>
+
+<h2>Administrator rights? A driver?</h2>
+<p>Neither is needed. <code>subst</code> is part of Windows, works with an ordinary user account, and uses plain Windows APIs — there is no file-system driver involved at all.</p>
+
+<h2>Can it map a network share?</h2>
+<p>No. <code>subst</code> maps a path on a local drive; a UNC path is not a valid target. For a NAS or file server you want a client that actually mounts the remote side as a local disk — see <a href="https://drive.scsoi.com/">drive.scsoi.com</a>.</p>
+
+<h2>Limitations worth knowing</h2>
+<ul>
+<li>Local folders only — no UNC, no network shares.</li>
+<li>The mapping is per-session, as described above.</li>
+<li>Some tools resolve the underlying path again (when they display the real folder), so the shorter path is not always visible.</li>
+<li>No permissions, encryption or quotas are added; the mapping exposes the folder under a second name, nothing more.</li>
+</ul>
+
+<h2>Why bother?</h2>
+<p>The classic reason is a deep path you keep typing: <code>D:\work\clients\2026\acme\project\...</code>. The other one I care about is isolating workspaces: give each project (or each agent) its own letter so tools that only accept a drive root have something to point at.</p>
+
+<p><em>Disclosure: I work on ScsSubst / SCSOI. The longer measured write-up is in the repository README: <a href="https://github.com/shuyingegit/scssubst-folder-to-drive-letter-faq">github.com/shuyingegit/scssubst-folder-to-drive-letter-faq</a>.</em></p>
+
 <ul>
 <li>Product: <a href="https://subst.scsoi.com/">https://subst.scsoi.com/</a></li>
 <li>Download / trial: <a href="https://subst.scsoi.com/#download">https://subst.scsoi.com/#download</a></li>
 <li>Pricing: <a href="https://subst.scsoi.com/#pricing">https://subst.scsoi.com/#pricing</a></li>
 </ul>
-<p>Useful for shorter paths and isolating AI/agent workspaces.</p>
-<p><em>Disclosure: I work on ScsSubst / SCSOI.</em></p>
 </article>
 </body>
 </html>
